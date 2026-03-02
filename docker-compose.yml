@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: awf-records-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: awf_user
+      POSTGRES_PASSWORD: awf_password
+      POSTGRES_DB: awf_records
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U awf_user -d awf_records"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

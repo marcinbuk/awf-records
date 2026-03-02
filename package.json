@@ -1,0 +1,22 @@
+{
+    "name": "awf-records",
+    "version": "1.0.0",
+    "private": true,
+    "workspaces": [
+        "apps/frontend",
+        "apps/backend",
+        "packages/shared"
+    ],
+    "scripts": {
+        "dev:backend": "npm run dev --workspace=apps/backend",
+        "dev:frontend": "npm run dev --workspace=apps/frontend",
+        "build:backend": "npm run build --workspace=apps/backend",
+        "build:frontend": "npm run build --workspace=apps/frontend",
+        "db:migrate": "npm run db:migrate --workspace=apps/backend",
+        "db:seed": "npm run db:seed --workspace=apps/backend",
+        "db:studio": "npm run db:studio --workspace=apps/backend"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    }
+}

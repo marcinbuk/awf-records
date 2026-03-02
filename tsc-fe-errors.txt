@@ -1,0 +1,3 @@
+src/pages/VerifyRecordsPage.tsx(78,43): error TS2322: Type 'string | { name: string; }' is not assignable to type 'ReactNode'.
+  Type '{ name: string; }' is not assignable to type 'ReactNode'.
+

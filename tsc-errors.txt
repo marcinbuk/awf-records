@@ -1,0 +1,7 @@
+src/routes/statistics.ts(112,13): error TS2322: Type '{ recordType: "UNIVERSITY"; gender?: string | undefined; disciplineId: string; }' is not assignable to type 'RecordWhereInput'.
+  Types of property 'gender' are incompatible.
+    Type 'string | undefined' is not assignable to type 'Gender | EnumGenderFilter<"Record"> | undefined'.
+      Type 'string' is not assignable to type 'Gender | EnumGenderFilter<"Record"> | undefined'.
+src/routes/statistics.ts(117,76): error TS2551: Property 'result' does not exist on type '{ id: string; gender: Gender; createdAt: Date; status: RecordStatus; disciplineId: string; resultId: string; recordType: RecordType; previousRecordId: string | null; verifiedById: string | null; verifiedAt: Date | null; isCurrentRecord: boolean; }'. Did you mean 'resultId'?
+src/routes/statistics.ts(117,98): error TS2551: Property 'result' does not exist on type '{ id: string; gender: Gender; createdAt: Date; status: RecordStatus; disciplineId: string; resultId: string; recordType: RecordType; previousRecordId: string | null; verifiedById: string | null; verifiedAt: Date | null; isCurrentRecord: boolean; }'. Did you mean 'resultId'?
+

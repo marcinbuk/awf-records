@@ -1,0 +1,355 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== USER ====================
+
+enum UserRole {
+  ADMIN
+  MODERATOR
+  ATHLETE
+  VIEWER
+}
+
+enum UserStatusType {
+  STUDENT
+  ALUMNI
+  STAFF
+  EXTERNAL
+}
+
+enum GenderType {
+  MALE
+  FEMALE
+}
+
+model User {
+  id              String         @id @default(uuid())
+  email           String         @unique
+  password        String
+  firstName       String
+  lastName        String
+  role            UserRole       @default(ATHLETE)
+  userStatus      UserStatusType @default(STUDENT)
+  studentId       String?        @unique
+  faculty         String?
+  specialization  String?
+  yearOfStudy     Int?
+  graduationYear  Int?
+  gender          GenderType
+  dateOfBirth     DateTime?
+  profilePhoto    String?
+  isActive        Boolean        @default(true)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  // Relations
+  results           Result[]           @relation("UserResults")
+  submittedResults  Result[]           @relation("SubmittedResults")
+  verifiedRecords   Record[]           @relation("VerifiedRecords")
+  uploadedVideos    VideoVerification[] @relation("UploadedVideos")
+  reviewedVideos    VideoVerification[] @relation("ReviewedVideos")
+  auditLogs         AuditLog[]
+  gameParticipations GameParticipation[]
+
+  @@index([lastName, firstName])
+  @@index([faculty])
+  @@index([userStatus])
+}
+
+// ==================== SPORT DISCIPLINE ====================
+
+enum DisciplineCategoryType {
+  TRACK
+  FIELD
+  SWIMMING
+  GYMNASTICS
+  TEAM_SPORT
+  STRENGTH
+  ENDURANCE
+  CUSTOM
+  OTHER
+}
+
+enum MeasurementUnitType {
+  SECONDS
+  MINUTES
+  METERS
+  CENTIMETERS
+  KILOGRAMS
+  POINTS
+  REPETITIONS
+  CUSTOM
+}
+
+enum RecordDirectionType {
+  HIGHER_IS_BETTER
+  LOWER_IS_BETTER
+}
+
+model SportDiscipline {
+  id               String                @id @default(uuid())
+  name             String                @unique
+  category         DisciplineCategoryType
+  measurementUnit  MeasurementUnitType
+  recordDirection  RecordDirectionType
+  description      String?
+  customUnitLabel  String?
+  isActive         Boolean               @default(true)
+  isCustom         Boolean               @default(false)
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+
+  // Default point conversion config (JSON)
+  defaultPointsFormula Json?
+
+  // Relations
+  results         Result[]
+  records         Record[]
+  gameDisciplines GameDiscipline[]
+
+  @@index([category])
+  @@index([isActive])
+}
+
+// ==================== RESULT ====================
+
+enum ResultSourceType {
+  MANUAL_ENTRY
+  COMPETITION_IMPORT
+  HISTORICAL
+  GAME_SUBMISSION
+}
+
+model Result {
+  id            String           @id @default(uuid())
+  userId        String
+  disciplineId  String
+  value         Float
+  displayValue  String?
+  date          DateTime
+  location      String?
+  competition   String?
+  isOfficial    Boolean          @default(false)
+  notes         String?
+  source        ResultSourceType @default(MANUAL_ENTRY)
+  isDeleted     Boolean          @default(false)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  submittedById String?
+
+  // Relations
+  user          User             @relation("UserResults", fields: [userId], references: [id])
+  discipline    SportDiscipline  @relation(fields: [disciplineId], references: [id])
+  submittedBy   User?            @relation("SubmittedResults", fields: [submittedById], references: [id])
+  records       Record[]
+  videos        VideoVerification[]
+  gameResults   GameResult[]
+
+  @@index([userId])
+  @@index([disciplineId])
+  @@index([date])
+  @@index([isDeleted])
+}
+
+// ==================== RECORD ====================
+
+enum RecordTypeEnum {
+  UNIVERSITY
+  FACULTY
+  YEAR_GROUP
+  PERSONAL_BEST
+}
+
+enum RecordStatusEnum {
+  PENDING
+  VERIFIED
+  REJECTED
+  SUPERSEDED
+}
+
+model Record {
+  id               String           @id @default(uuid())
+  resultId         String
+  disciplineId     String
+  recordType       RecordTypeEnum
+  gender           GenderType
+  status           RecordStatusEnum @default(PENDING)
+  isCurrentRecord  Boolean          @default(true)
+  previousRecordId String?
+  verifiedById     String?
+  verifiedAt       DateTime?
+  verificationComment String?
+  facultyFilter    String?
+  yearGroupFilter  Int?
+  createdAt        DateTime         @default(now())
+
+  // Relations
+  result          Result          @relation(fields: [resultId], references: [id])
+  discipline      SportDiscipline @relation(fields: [disciplineId], references: [id])
+  previousRecord  Record?         @relation("RecordHistory", fields: [previousRecordId], references: [id])
+  nextRecords     Record[]        @relation("RecordHistory")
+  verifiedBy      User?           @relation("VerifiedRecords", fields: [verifiedById], references: [id])
+
+  @@index([disciplineId, recordType, gender, isCurrentRecord])
+  @@index([status])
+  @@index([resultId])
+}
+
+// ==================== VIDEO VERIFICATION ====================
+
+enum VideoStatusType {
+  UPLOADED
+  PROCESSING
+  VERIFIED
+  REJECTED
+}
+
+model VideoVerification {
+  id              String          @id @default(uuid())
+  resultId        String
+  videoUrl        String
+  thumbnailUrl    String?
+  fileName        String
+  fileSize        Int
+  duration        Float?
+  mimeType        String?
+  uploadedById    String
+  status          VideoStatusType @default(UPLOADED)
+  reviewerComment String?
+  reviewedById    String?
+  reviewedAt      DateTime?
+  createdAt       DateTime        @default(now())
+
+  // Relations
+  result       Result @relation(fields: [resultId], references: [id])
+  uploadedBy   User   @relation("UploadedVideos", fields: [uploadedById], references: [id])
+  reviewedBy   User?  @relation("ReviewedVideos", fields: [reviewedById], references: [id])
+
+  @@index([resultId])
+  @@index([status])
+}
+
+// ==================== AUDIT LOG ====================
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  userId      String?
+  action      String
+  entityType  String
+  entityId    String?
+  oldValues   Json?
+  newValues   Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// ==================== OVERALL GAMES ====================
+
+enum GameEditionStatusType {
+  DRAFT
+  UPCOMING
+  ACTIVE
+  SCORING
+  COMPLETED
+  CANCELLED
+}
+
+enum PointFormulaTypeEnum {
+  LINEAR
+  TABLE
+  PERCENTAGE
+  CUSTOM
+}
+
+model GameEdition {
+  id               String                @id @default(uuid())
+  name             String
+  description      String?
+  month            Int
+  year             Int
+  startDate        DateTime
+  endDate          DateTime
+  status           GameEditionStatusType @default(DRAFT)
+  maxParticipants  Int?
+  isOpenForAlumni  Boolean               @default(true)
+  isOpenForExternal Boolean              @default(false)
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+
+  // Relations
+  disciplines    GameDiscipline[]
+  participations GameParticipation[]
+
+  @@unique([month, year])
+  @@index([status])
+}
+
+model GameDiscipline {
+  id             String              @id @default(uuid())
+  editionId      String
+  disciplineId   String
+  pointsConfig   Json
+  maxPoints      Int                 @default(100)
+  order          Int                 @default(0)
+  isRequired     Boolean             @default(false)
+
+  // Relations
+  edition    GameEdition     @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  discipline SportDiscipline @relation(fields: [disciplineId], references: [id])
+  results    GameResult[]
+
+  @@unique([editionId, disciplineId])
+  @@index([editionId])
+}
+
+model GameParticipation {
+  id          String   @id @default(uuid())
+  editionId   String
+  userId      String
+  totalPoints Float    @default(0)
+  rank        Int?
+  isActive    Boolean  @default(true)
+  joinedAt    DateTime @default(now())
+
+  // Relations
+  edition GameEdition  @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  user    User         @relation(fields: [userId], references: [id])
+  results GameResult[]
+
+  @@unique([editionId, userId])
+  @@index([editionId, totalPoints(sort: Desc)])
+}
+
+model GameResult {
+  id                String  @id @default(uuid())
+  participationId   String
+  gameDisciplineId  String
+  resultId          String?
+  rawValue          Float
+  points            Float   @default(0)
+  isVerified        Boolean @default(false)
+  verificationNote  String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  participation  GameParticipation @relation(fields: [participationId], references: [id], onDelete: Cascade)
+  gameDiscipline GameDiscipline    @relation(fields: [gameDisciplineId], references: [id])
+  result         Result?           @relation(fields: [resultId], references: [id])
+
+  @@unique([participationId, gameDisciplineId])
+  @@index([gameDisciplineId])
+}
