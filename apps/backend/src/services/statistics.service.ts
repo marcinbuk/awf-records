@@ -124,5 +124,77 @@ export async function getFacultyRanking() {
         })
     );
 
-    return rankings.sort((a, b) => b.recordCount - a.recordCount);
+    return rankings.sort((a, b) => (b.recordCount * 10 + b.resultCount) - (a.recordCount * 10 + a.resultCount));
+}
+
+export async function getAthleteRanking() {
+    // Get all active athletes
+    const athletes = await prisma.user.findMany({
+        where: { role: 'ATHLETE', isActive: true },
+        select: {
+            id: true, firstName: true, lastName: true, gender: true, faculty: true,
+            _count: { select: { results: { where: { isDeleted: false } } } },
+        },
+    });
+
+    // Get record counts per user (through Result → Record join)
+    const recordCounts = await prisma.record.groupBy({
+        by: ['resultId'],
+        where: { isCurrentRecord: true, status: 'VERIFIED' },
+    });
+
+    // Map resultIds to userIds
+    const resultIds = recordCounts.map(r => r.resultId);
+    const results = resultIds.length > 0
+        ? await prisma.result.findMany({
+            where: { id: { in: resultIds } },
+            select: { id: true, userId: true },
+        })
+        : [];
+
+    const userRecordMap = new Map<string, number>();
+    for (const result of results) {
+        userRecordMap.set(result.userId, (userRecordMap.get(result.userId) || 0) + 1);
+    }
+
+    // Get game result points per user
+    const gameResults = await prisma.gameResult.groupBy({
+        by: ['participationId'],
+        _count: true,
+    });
+
+    const participationIds = gameResults.map(g => g.participationId);
+    const participations = participationIds.length > 0
+        ? await prisma.gameParticipation.findMany({
+            where: { id: { in: participationIds } },
+            select: { id: true, userId: true },
+        })
+        : [];
+
+    const userGameMap = new Map<string, number>();
+    for (const p of participations) {
+        const count = gameResults.find(g => g.participationId === p.id)?._count || 0;
+        userGameMap.set(p.userId, (userGameMap.get(p.userId) || 0) + count);
+    }
+
+    // Calculate ranking
+    const ranked = athletes.map(a => {
+        const resultCount = a._count.results;
+        const recordCount = userRecordMap.get(a.id) || 0;
+        const gameResultCount = userGameMap.get(a.id) || 0;
+        const points = recordCount * 10 + resultCount + gameResultCount * 5;
+        return {
+            id: a.id,
+            firstName: a.firstName,
+            lastName: a.lastName,
+            gender: a.gender,
+            faculty: a.faculty,
+            resultCount,
+            recordCount,
+            gameResultCount,
+            points,
+        };
+    });
+
+    return ranked.sort((a, b) => b.points - a.points);
 }

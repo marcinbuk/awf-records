@@ -77,7 +77,7 @@ export default function AthleteProfilePage() {
                                 {athlete.yearOfStudy && <Badge variant="outline">{athlete.yearOfStudy} rok studiów</Badge>}
                             </div>
                             {athlete.faculty && <div className="text-sm text-muted-foreground mt-2">{athlete.faculty}{athlete.specialization ? ` · ${athlete.specialization}` : ''}</div>}
-                            {athlete.studentId && <div className="text-xs text-muted-foreground font-mono mt-1">Nr albumu: {athlete.studentId}</div>}
+
                         </div>
                         <div className="text-right text-sm text-muted-foreground">
                             <div>W systemie od</div>

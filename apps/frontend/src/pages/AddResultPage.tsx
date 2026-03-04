@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import confetti from 'canvas-confetti';
@@ -14,12 +14,15 @@ interface NewRecord { id: string; recordType: string; gender: string }
 
 export default function AddResultPage() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { user } = useAuthStore();
     const [newRecords, setNewRecords] = useState<NewRecord[]>([]);
     const [showRecordAlert, setShowRecordAlert] = useState(false);
     const [userSearch, setUserSearch] = useState('');
     const [selectedUser, setSelectedUser] = useState<{ id: string; firstName: string; lastName: string } | null>(null);
     const [videoFile, setVideoFile] = useState<File | null>(null);
+
+    const preselectedDiscipline = searchParams.get('discipline') || '';
 
     const { data: disciplines } = useQuery({
         queryKey: ['disciplines'],
@@ -35,7 +38,7 @@ export default function AddResultPage() {
     const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
         defaultValues: {
             userId: user?.role === 'ATHLETE' ? user.id : '',
-            disciplineId: '',
+            disciplineId: preselectedDiscipline,
             value: '',
             displayValue: '',
             date: new Date().toISOString().split('T')[0],
@@ -56,6 +59,16 @@ export default function AddResultPage() {
             setValue('userId', user.id);
         }
     }, [user, setValue]);
+
+    // Pre-fill discipline from URL param once disciplines load
+    useEffect(() => {
+        if (preselectedDiscipline && disciplines) {
+            const found = disciplines.find((d: { id: string }) => d.id === preselectedDiscipline);
+            if (found) {
+                setValue('disciplineId', preselectedDiscipline);
+            }
+        }
+    }, [preselectedDiscipline, disciplines, setValue]);
 
     const mutation = useMutation({
         mutationFn: (data: object) => resultsApi.create(data),
@@ -153,7 +166,7 @@ export default function AddResultPage() {
                             <div className="space-y-1.5">
                                 <label className="text-sm font-medium">Zawodnik</label>
                                 <Input
-                                    placeholder="Szukaj po imieniu, nazwisku lub nr albumu..."
+                                    placeholder="Szukaj po imieniu lub nazwisku..."
                                     value={userSearch}
                                     onChange={e => setUserSearch(e.target.value)}
                                 />

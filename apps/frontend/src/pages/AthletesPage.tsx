@@ -18,9 +18,12 @@ export default function AthletesPage() {
             search: search || undefined,
             gender: gender || undefined,
             faculty: faculty || undefined,
-        }).then(r => r.data.data),
+        }).then(r => r.data),
         placeholderData: prev => prev,
     });
+
+    const athletes = data?.data || [];
+    const pagination = data?.pagination;
 
     return (
         <div className="page-container space-y-5">
@@ -47,10 +50,10 @@ export default function AthletesPage() {
             ) : (
                 <>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {(data?.data || []).length === 0 ? (
+                        {athletes.length === 0 ? (
                             <div className="col-span-3 text-center py-20 text-muted-foreground">Brak zawodników spełniających kryteria</div>
                         ) : (
-                            (data?.data || []).map((athlete: {
+                            athletes.map((athlete: {
                                 id: string; firstName: string; lastName: string;
                                 gender: string; faculty?: string; specialization?: string;
                                 studentId?: string; yearOfStudy?: number;
@@ -83,19 +86,17 @@ export default function AthletesPage() {
                                             )}
                                         </div>
                                     )}
-                                    {athlete.studentId && (
-                                        <div className="mt-2 text-xs text-muted-foreground font-mono">Nr albumu: {athlete.studentId}</div>
-                                    )}
+
                                 </Link>
                             ))
                         )}
                     </div>
-                    {data && data.totalPages > 1 && (
+                    {pagination && pagination.totalPages > 1 && (
                         <div className="flex items-center justify-between">
-                            <span className="text-sm text-muted-foreground">{data.total} zawodników</span>
+                            <span className="text-sm text-muted-foreground">{pagination.total} zawodników</span>
                             <div className="flex gap-2">
                                 <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Poprzednia</Button>
-                                <Button variant="outline" size="sm" disabled={page >= data.totalPages} onClick={() => setPage(p => p + 1)}>Następna</Button>
+                                <Button variant="outline" size="sm" disabled={page >= pagination.totalPages} onClick={() => setPage(p => p + 1)}>Następna</Button>
                             </div>
                         </div>
                     )}

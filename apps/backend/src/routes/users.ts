@@ -4,8 +4,8 @@ import { authenticate, authorize, optionalAuth } from '../middleware/auth';
 
 const router = Router();
 
-router.get('/', authenticate, userCtrl.getAll);
-router.get('/:id', authenticate, userCtrl.getById);
+router.get('/', optionalAuth, userCtrl.getAll);
+router.get('/:id', optionalAuth, userCtrl.getById);
 router.put('/profile', authenticate, userCtrl.update);
 router.put('/:id', authenticate, authorize('ADMIN'), userCtrl.update);
 router.delete('/:id', authenticate, authorize('ADMIN'), userCtrl.remove);

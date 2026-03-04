@@ -45,3 +45,10 @@ export async function getAuditLog(req: Request, res: Response, next: NextFunctio
         res.json({ success: true, ...data });
     } catch (error) { next(error); }
 }
+
+export async function getAthleteRanking(req: Request, res: Response, next: NextFunction) {
+    try {
+        const data = await statisticsService.getAthleteRanking();
+        res.json({ success: true, data });
+    } catch (error) { next(error); }
+}

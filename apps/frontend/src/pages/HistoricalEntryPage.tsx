@@ -105,10 +105,6 @@ export default function HistoricalEntryPage() {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Nr albumu</label>
-                                <Input value={form.studentId} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, studentId: e.target.value })} placeholder="S001" />
-                            </div>
-                            <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Wydział</label>
                                 <select className="w-full p-2 border rounded text-sm" value={form.faculty} onChange={(e) => setForm({ ...form, faculty: e.target.value })}>
                                     <option value="">Wybierz...</option>

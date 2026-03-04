@@ -144,3 +144,95 @@ export async function getRecordTimeline(disciplineId: string, gender?: string, r
         orderBy: { result: { date: 'asc' } },
     });
 }
+
+export async function getTopRecords(limit: number = 10) {
+    // Fetch all current, verified university records with related data
+    const records = await prisma.record.findMany({
+        where: {
+            isCurrentRecord: true,
+            status: 'VERIFIED',
+            recordType: 'UNIVERSITY',
+        },
+        include: {
+            discipline: {
+                select: {
+                    id: true,
+                    name: true,
+                    category: true,
+                    measurementUnit: true,
+                    recordDirection: true,
+                },
+            },
+            result: {
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            firstName: true,
+                            lastName: true,
+                            faculty: true,
+                            gender: true,
+                        },
+                    },
+                },
+            },
+        },
+        orderBy: { discipline: { name: 'asc' } },
+    });
+
+    // De-duplicate: keep only the best record per discipline (one per disciplineId + gender combo)
+    const seen = new Set<string>();
+    const unique = records.filter((r) => {
+        const key = `${r.disciplineId}_${r.gender}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
+
+    // Round-robin across categories for variety
+    const byCategory = new Map<string, typeof unique>();
+    for (const r of unique) {
+        const cat = r.discipline.category;
+        if (!byCategory.has(cat)) byCategory.set(cat, []);
+        byCategory.get(cat)!.push(r);
+    }
+
+    const result: typeof unique = [];
+    const categoryQueues = Array.from(byCategory.values());
+    let idx = 0;
+    while (result.length < limit && categoryQueues.some(q => q.length > 0)) {
+        const queue = categoryQueues[idx % categoryQueues.length];
+        if (queue.length > 0) {
+            result.push(queue.shift()!);
+        }
+        idx++;
+    }
+
+    return result;
+}
+
+export async function getRecordById(id: string) {
+    const record = await prisma.record.findUnique({
+        where: { id },
+        include: {
+            result: {
+                include: {
+                    user: { select: { id: true, firstName: true, lastName: true, faculty: true, gender: true } },
+                    discipline: true,
+                    videos: { select: { id: true, status: true, videoUrl: true } }
+                }
+            },
+            discipline: true,
+            previousRecord: {
+                include: {
+                    result: { include: { user: { select: { firstName: true, lastName: true } } } }
+                }
+            },
+        },
+    });
+    if (!record) throw new AppError('Rekord nie znaleziony', 404);
+    return record;
+}
+
+
+

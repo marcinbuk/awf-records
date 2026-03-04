@@ -37,3 +37,19 @@ export async function getTimeline(req: Request, res: Response, next: NextFunctio
         res.json({ success: true, data });
     } catch (error) { next(error); }
 }
+
+export async function getTop(req: Request, res: Response, next: NextFunction) {
+    try {
+        const limit = parseInt(req.query.limit as string) || 10;
+        const data = await recordService.getTopRecords(limit);
+        res.json({ success: true, data });
+    } catch (error) { next(error); }
+}
+
+export async function getById(req: Request, res: Response, next: NextFunction) {
+    try {
+        const data = await recordService.getRecordById(req.params.id);
+        res.json({ success: true, data });
+    } catch (error) { next(error); }
+}
+

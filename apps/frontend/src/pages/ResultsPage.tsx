@@ -21,9 +21,12 @@ export default function ResultsPage() {
 
     const { data, isLoading } = useQuery({
         queryKey: ['results', page, search, disciplineId, sortBy],
-        queryFn: () => resultsApi.getAll({ page, limit: 20, search: search || undefined, disciplineId: disciplineId || undefined, sortBy }).then(r => r.data.data),
+        queryFn: () => resultsApi.getAll({ page, limit: 20, search: search || undefined, disciplineId: disciplineId || undefined, sortBy }).then(r => r.data),
         placeholderData: prev => prev,
     });
+
+    const results = data?.data || [];
+    const pagination = data?.pagination;
 
     const handleExport = async () => {
         const res = await resultsApi.export({ disciplineId: disciplineId || undefined });
@@ -94,10 +97,10 @@ export default function ResultsPage() {
                                             ))}
                                         </tr>
                                     ))
-                                ) : (data?.data || []).length === 0 ? (
+                                ) : results.length === 0 ? (
                                     <tr><td colSpan={7} className="text-center py-12 text-muted-foreground">Brak wyników spełniających kryteria</td></tr>
                                 ) : (
-                                    (data?.data || []).map((r: {
+                                    results.map((r: {
                                         id: string;
                                         user: { id: string; firstName: string; lastName: string; gender: string };
                                         discipline: { name: string; category: string };
@@ -140,14 +143,14 @@ export default function ResultsPage() {
                     </div>
 
                     {/* Pagination */}
-                    {data && data.totalPages > 1 && (
+                    {pagination && pagination.totalPages > 1 && (
                         <div className="flex items-center justify-between px-4 py-3 border-t border-border">
                             <span className="text-sm text-muted-foreground">
-                                {data.total} wyników · Strona {page} z {data.totalPages}
+                                {pagination.total} wyników · Strona {page} z {pagination.totalPages}
                             </span>
                             <div className="flex gap-2">
                                 <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Poprzednia</Button>
-                                <Button variant="outline" size="sm" disabled={page >= data.totalPages} onClick={() => setPage(p => p + 1)}>Następna</Button>
+                                <Button variant="outline" size="sm" disabled={page >= pagination.totalPages} onClick={() => setPage(p => p + 1)}>Następna</Button>
                             </div>
                         </div>
                     )}

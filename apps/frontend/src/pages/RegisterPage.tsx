@@ -74,9 +74,6 @@ export default function RegisterPage() {
                                 <option value="FEMALE">Kobieta</option>
                             </Select>
                         </FormField>
-                        <FormField label="Numer albumu" error={errors.studentId?.message}>
-                            <Input placeholder="2024001" {...register('studentId')} />
-                        </FormField>
                         <FormField label="Wydział" error={errors.faculty?.message}>
                             <Input placeholder="Wydział Wychowania Fizycznego" {...register('faculty')} />
                         </FormField>

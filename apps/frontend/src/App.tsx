@@ -21,6 +21,8 @@ import AdminAuditLogPage from '@/pages/AdminAuditLogPage';
 import VideosPage from '@/pages/VideosPage';
 import GamesPage from '@/pages/GamesPage';
 import HistoricalEntryPage from '@/pages/HistoricalEntryPage';
+import MyStatsPage from '@/pages/MyStatsPage';
+import RankingPage from '@/pages/RankingPage';
 import { Toaster } from '@/components/ui/toaster';
 
 function PrivateRoute({ children, roles }: { children: React.ReactNode; roles?: string[] }) {
@@ -53,6 +55,8 @@ export default function App() {
                     <Route path="/athletes" element={<AthletesPage />} />
                     <Route path="/athletes/:id" element={<AthleteProfilePage />} />
                     <Route path="/statistics" element={<StatisticsPage />} />
+                    <Route path="/my-stats" element={<MyStatsPage />} />
+                    <Route path="/ranking" element={<RankingPage />} />
                     <Route path="/disciplines" element={<DisciplinesPage />} />
                     <Route path="/videos" element={<VideosPage />} />
                     <Route path="/games" element={<GamesPage />} />

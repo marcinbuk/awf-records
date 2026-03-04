@@ -20,7 +20,7 @@ const app = express();
 
 // Middleware
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
-app.use(cors({ origin: config.frontendUrl, credentials: true }));
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(generalLimiter);
@@ -45,6 +45,13 @@ app.use('/api/videos', videoRoutes);
 
 // Error handling
 app.use(errorHandler);
+
+// Serve frontend build (production mode)
+const frontendDistPath = path.resolve(__dirname, '../../frontend/dist');
+app.use(express.static(frontendDistPath));
+app.get('*', (_req, res) => {
+    res.sendFile(path.join(frontendDistPath, 'index.html'));
+});
 
 // Start server
 app.listen(config.port, () => {

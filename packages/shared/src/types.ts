@@ -148,3 +148,35 @@ export interface PointConversionConfig {
     table?: { min: number; max: number; points: number }[];
     maxPoints?: number;
 }
+
+// ==================== TOP RECORDS (Dashboard) ====================
+
+export interface TopRecord {
+    id: string;
+    recordType: RecordType;
+    gender: Gender;
+    status: RecordStatus;
+    createdAt: string;
+    discipline: {
+        id: string;
+        name: string;
+        category: DisciplineCategory;
+        measurementUnit: MeasurementUnit;
+        recordDirection: RecordDirection;
+    };
+    result: {
+        id: string;
+        value: number;
+        displayValue: string | null;
+        date: string;
+        location: string | null;
+        competition: string | null;
+        user: {
+            id: string;
+            firstName: string;
+            lastName: string;
+            faculty: string | null;
+            gender: Gender;
+        };
+    };
+}

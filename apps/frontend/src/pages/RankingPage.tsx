@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { statisticsApi, userApi } from '@/services/api';
+import { statisticsApi } from '@/services/api';
 import { Card, Skeleton } from '@/components/ui';
-import { Trophy, Medal, Users as UsersIcon, TrendingUp } from 'lucide-react';
+import { Trophy, Medal, Users as UsersIcon, TrendingUp, Gamepad2 } from 'lucide-react';
 
 type Tab = 'faculty' | 'athletes';
 
@@ -14,22 +14,13 @@ export default function RankingPage() {
         queryFn: () => statisticsApi.getFacultyRanking().then(r => r.data.data),
     });
 
-    const { data: allUsers, isLoading: loadingUsers } = useQuery({
-        queryKey: ['all-users-ranking'],
-        queryFn: () => userApi.getAll({ role: 'ATHLETE' }).then(r => r.data.data),
+    const { data: athleteRanking, isLoading: loadingAthletes } = useQuery({
+        queryKey: ['athlete-ranking'],
+        queryFn: () => statisticsApi.getAthleteRanking().then(r => r.data.data),
     });
 
-    const isLoading = tab === 'faculty' ? loadingFaculty : loadingUsers;
-
-    // Sort athletes by results count (proxy for activity/ranking)
-    const sortedAthletes = (allUsers || [])
-        .map((u: any) => ({
-            ...u,
-            resultCount: u._count?.results ?? u.resultCount ?? 0,
-            recordCount: u._count?.records ?? u.recordCount ?? 0,
-            points: (u._count?.records ?? u.recordCount ?? 0) * 10 + (u._count?.results ?? u.resultCount ?? 0),
-        }))
-        .sort((a: any, b: any) => b.points - a.points);
+    const isLoading = tab === 'faculty' ? loadingFaculty : loadingAthletes;
+    const sortedAthletes = athleteRanking || [];
 
     const podiumColors = ['text-yellow-400', 'text-gray-400', 'text-amber-600'];
     const podiumEmoji = ['🥇', '🥈', '🥉'];
@@ -38,7 +29,7 @@ export default function RankingPage() {
         <div className="space-y-6">
             <div>
                 <h1 className="text-2xl font-bold text-foreground">🏆 Ranking Ogólny</h1>
-                <p className="text-muted-foreground">Porównanie zawodników i wydziałów na podstawie wyników i rekordów</p>
+                <p className="text-muted-foreground">Porównanie zawodników i wydziałów na podstawie wyników, rekordów i challenge'ów</p>
             </div>
 
             {/* Tab switcher */}
@@ -59,10 +50,10 @@ export default function RankingPage() {
                 </div>
             ) : tab === 'athletes' ? (
                 <Card className="p-6">
-                    <h2 className="text-lg font-bold text-foreground mb-4">
+                    <h2 className="text-lg font-bold text-foreground mb-2">
                         <UsersIcon size={18} className="inline mr-2" />Ranking zawodników
                     </h2>
-                    <p className="text-xs text-muted-foreground mb-4">Punkty = rekordy × 10 + wyniki</p>
+                    <p className="text-xs text-muted-foreground mb-4">Punkty = rekordy × 10 + wyniki + challenge × 5</p>
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead>
@@ -72,6 +63,7 @@ export default function RankingPage() {
                                     <th className="text-left p-3">Wydział</th>
                                     <th className="text-center p-3">Wyniki</th>
                                     <th className="text-center p-3">Rekordy</th>
+                                    <th className="text-center p-3">Challenge</th>
                                     <th className="text-right p-3 font-bold">Punkty</th>
                                 </tr>
                             </thead>
@@ -103,7 +95,12 @@ export default function RankingPage() {
                                         </td>
                                         <td className="p-3 text-center">
                                             <span className="bg-yellow-400/10 text-yellow-400 px-2 py-1 rounded text-xs font-medium">
-                                                {athlete.recordCount}
+                                                <Trophy size={10} className="inline mr-1" />{athlete.recordCount}
+                                            </span>
+                                        </td>
+                                        <td className="p-3 text-center">
+                                            <span className="bg-purple-400/10 text-purple-400 px-2 py-1 rounded text-xs font-medium">
+                                                <Gamepad2 size={10} className="inline mr-1" />{athlete.gameResultCount}
                                             </span>
                                         </td>
                                         <td className="p-3 text-right font-bold text-primary text-lg">{athlete.points}</td>

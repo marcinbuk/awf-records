@@ -74,11 +74,15 @@ export const resultApi = {
     update: (id: string, data: any) => api.put(`/results/${id}`, data),
     delete: (id: string) => api.delete(`/results/${id}`),
     getPersonalBests: (userId: string) => api.get(`/results/user/${userId}/personal-bests`),
+    export: (params?: any) => api.get('/results/export', { params, responseType: 'blob' }),
+    import: (formData: FormData) => api.post('/results/import', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
 };
 
 // ==================== RECORDS ====================
 export const recordApi = {
     getAll: (params?: any) => api.get('/records', { params }),
+    getById: (id: string) => api.get(`/records/${id}`),
+    getTop: (limit?: number) => api.get('/records/top', { params: { limit } }),
     getPending: () => api.get('/records/pending'),
     verify: (id: string, data: any) => api.put(`/records/${id}/verify`, data),
     getTimeline: (disciplineId: string, params?: any) => api.get(`/records/timeline/${disciplineId}`, { params }),
@@ -93,6 +97,9 @@ export const userApi = {
     delete: (id: string) => api.delete(`/users/${id}`),
     getStatistics: (id: string) => api.get(`/users/${id}/statistics`),
     quickHistoricalEntry: (data: any) => api.post('/users/historical-entry', data),
+    getPersonalBests: (userId: string) => api.get(`/results/user/${userId}/personal-bests`),
+    getResults: (userId: string, params?: any) => api.get(`/results`, { params: { userId, ...params } }),
+    getRecords: (userId: string) => api.get(`/records`, { params: { userId } }),
 };
 
 // ==================== STATISTICS ====================
@@ -101,7 +108,11 @@ export const statisticsApi = {
     getDisciplineStats: (disciplineId: string) => api.get(`/statistics/discipline/${disciplineId}`),
     compareAthletes: (ids: string[], disciplineId?: string) => api.get('/statistics/compare', { params: { ids: ids.join(','), disciplineId } }),
     getFacultyRanking: () => api.get('/statistics/faculties'),
+    facultyRanking: () => api.get('/statistics/faculties'),
     getAuditLogs: (params?: any) => api.get('/statistics/audit-logs', { params }),
+    auditLog: (params?: any) => api.get('/statistics/audit-logs', { params }),
+    getAthleteRanking: () => api.get('/statistics/athlete-ranking'),
+    trends: (params: { disciplineId: string, gender?: string }) => api.get(`/statistics/discipline/${params.disciplineId}`, { params: { gender: params.gender } }),
 };
 
 // ==================== GAMES ====================
